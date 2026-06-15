@@ -7,6 +7,7 @@ import Navbar from './components/navbar';
 import Footer from './components/footer';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { FaInstagram, FaTwitter, FaFacebook } from 'react-icons/fa';
 
 const popularCourses = [
   {
@@ -80,9 +81,9 @@ const teamMembers = [
     bio: "Over 15 years of experience in early childhood education. Passionate about innovative learning approaches.",
     image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600",
     socials: [
-      { icon: "𝕏", link: "#" },
-      { icon: "📘", link: "#" },
-      { icon: "🔗", link: "#" },
+      { icon: <FaTwitter/>, link: "#" },
+      { icon: <FaInstagram/>, link: "#" },
+      { icon: <FaFacebook/>, link: "#" },
     ],
   },
   {
@@ -91,8 +92,9 @@ const teamMembers = [
     bio: "Expert in developing engaging math and logic programs for children aged 5-10.",
     image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600",
     socials: [
-      { icon: "𝕏", link: "#" },
-      { icon: "📘", link: "#" },
+      { icon: <FaTwitter/>, link: "#" },
+      { icon: <FaInstagram/>, link: "#" },
+      { icon: <FaFacebook/>, link:"#"}
     ],
   },
   {
@@ -101,9 +103,9 @@ const teamMembers = [
     bio: "Specializes in language development and creative arts. Makes learning fun and meaningful.",
     image: "https://images.unsplash.com/photo-1580489944761-09be1ec59862?w=600",
     socials: [
-      { icon: "𝕏", link: "#" },
-      { icon: "📷", link: "#" },
-      { icon: "🔗", link: "#" },
+      { icon: <FaTwitter/>, link: "#" },
+      { icon: <FaInstagram/>, link: "#" },
+      { icon: <FaFacebook/>, link:"#"}
     ],
   },
   {
@@ -112,8 +114,9 @@ const teamMembers = [
     bio: "Building interactive learning tools and ensuring a seamless digital experience for students.",
     image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600",
     socials: [
-      { icon: "𝕏", link: "#" },
-      { icon: "📘", link: "#" },
+      { icon: <FaTwitter/>, link: "#" },
+      { icon: <FaInstagram/>, link: "#" },
+      { icon: <FaFacebook/>, link:"#"}
     ],
   },
 ];

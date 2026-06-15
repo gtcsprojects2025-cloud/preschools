@@ -13,8 +13,9 @@ export default function Footer() {
             {/* Left Column - Brand & Newsletter */}
             <div className="md:col-span-5">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-11 h-11 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl flex items-center justify-center">
-                  <BookOpen className="w-6 h-6" />
+                <div className="w-11 h-11 bg-white rounded-2xl flex items-center justify-center">
+                  {/* <BookOpen className="w-6 h-6" /> */}
+                  <Image src={'/pfslogo.png'} alt='Pfschools' width={40} height={40}/>
                 </div>
                 <span className="text-3xl font-bold tracking-tight text-white">PFSchools</span>
               </div>
@@ -58,29 +59,29 @@ export default function Footer() {
               <div>
                 <h5 className="font-semibold mb-5 text-white">Platform</h5>
                 <ul className="space-y-3 text-zinc-400">
-                  <li><a href="#courses" className="hover:text-white transition">Courses</a></li>
-                  <li><a href="#journey" className="hover:text-white transition">Learning Journey</a></li>
-                  <li><a href="#" className="hover:text-white transition">Pricing</a></li>
-                  <li><a href="#" className="hover:text-white transition">For Schools</a></li>
+                  <li><a href="/courses" className="hover:text-white transition">Courses</a></li>
+                  <li><a href="/#journey" className="hover:text-white transition">Learning Journey</a></li>
+                  {/* <li><a href="#" className="hover:text-white transition">Pricing</a></li> */}
+                  {/* <li><a href="#" className="hover:text-white transition">For Schools</a></li> */}
                 </ul>
               </div>
 
               <div>
                 <h5 className="font-semibold mb-5 text-white">Company</h5>
                 <ul className="space-y-3 text-zinc-400">
-                  <li><a href="#about" className="hover:text-white transition">About Us</a></li>
-                  <li><a href="#" className="hover:text-white transition">Our Teachers</a></li>
-                  <li><a href="#testimonials" className="hover:text-white transition">Testimonials</a></li>
-                  <li><a href="#" className="hover:text-white transition">Blog</a></li>
-                  <li><a href="#" className="hover:text-white transition">Careers</a></li>
+                  <li><a href="/about" className="hover:text-white transition">About Us</a></li>
+                  <li><a href="/instructors" className="hover:text-white transition">Our Instructors</a></li>
+                  <li><a href="/#testimonials" className="hover:text-white transition">Testimonials</a></li>
+                  {/* <li><a href="#" className="hover:text-white transition">Blog</a></li> */}
+                  {/* <li><a href="#" className="hover:text-white transition">Careers</a></li> */}
                 </ul>
               </div>
 
               <div>
                 <h5 className="font-semibold mb-5 text-white">Support</h5>
                 <ul className="space-y-3 text-zinc-400">
-                  <li><a href="#" className="hover:text-white transition">Help Center</a></li>
-                  <li><a href="#" className="hover:text-white transition">Contact Us</a></li>
+                  {/* <li><a href="#" className="hover:text-white transition">Help Center</a></li> */}
+                  <li><a href="/contact" className="hover:text-white transition">Contact Us</a></li>
                   <li><a href="#" className="hover:text-white transition">Parent Resources</a></li>
                   <li><a href="#" className="hover:text-white transition">Safety & Privacy</a></li>
                 </ul>

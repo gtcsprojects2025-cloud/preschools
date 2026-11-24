@@ -1,27 +1,31 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { BookOpen, Users, Award, Heart, Target, Eye } from 'lucide-react';
+import { BookOpen, Users, Heart, Target, Eye } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import Navbar from '../components/navbar';
 import Footer from '../components/footer';
-
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
-      {/* Navbar */}
-<Navbar />
+    <>
+      <Navbar />
 
+      <main id="main-content" className="min-h-screen bg-zinc-950 text-white">
       {/* Hero Banner */}
       <div className="pt-24 relative h-[580px] flex items-center">
-        <div 
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=2000')" }}
+        <Image
+          src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=2000"
+          alt=""
+          fill
+          sizes="100vw"
+          preload
+          className="object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/70 to-black" />
 
         <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-6xl md:text-7xl font-bold heading-font tracking-tighter"
@@ -47,7 +51,7 @@ export default function AboutPage() {
               className="space-y-6"
             >
               <div className="flex items-center gap-4">
-                <Target className="w-12 h-12 text-violet-400" />
+                <Target aria-hidden="true" className="w-12 h-12 text-violet-400" />
                 <h2 className="text-4xl font-bold heading-font">Our Mission</h2>
               </div>
               <p className="text-lg text-zinc-300 leading-relaxed">
@@ -67,7 +71,7 @@ export default function AboutPage() {
               className="space-y-6"
             >
               <div className="flex items-center gap-4">
-                <Eye className="w-12 h-12 text-fuchsia-400" />
+                <Eye aria-hidden="true" className="w-12 h-12 text-fuchsia-400" />
                 <h2 className="text-4xl font-bold heading-font">Our Vision</h2>
               </div>
               <p className="text-lg text-zinc-300 leading-relaxed">
@@ -117,7 +121,7 @@ export default function AboutPage() {
                 transition={{ delay: i * 0.15 }}
                 className="bg-zinc-900 p-10 rounded-3xl hover:bg-zinc-800/80 transition group"
               >
-                <item.icon className="w-14 h-14 text-violet-400 mb-6 group-hover:scale-110 transition" />
+                <item.icon aria-hidden="true" className="w-14 h-14 text-violet-400 mb-6 group-hover:scale-110 transition" />
                 <h3 className="text-2xl font-semibold mb-4">{item.title}</h3>
                 <p className="text-zinc-400 leading-relaxed">{item.desc}</p>
               </motion.div>
@@ -164,26 +168,24 @@ export default function AboutPage() {
             Give your child the gift of joyful, effective learning.
           </p>
           <div className="mt-10 flex justify-center gap-4">
-            <Link href="/courses">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                className="px-10 py-4 bg-violet-600 rounded-2xl font-semibold text-lg"
-              >
-                Explore Courses
-              </motion.button>
+            <Link
+              href="/courses"
+              className="px-10 py-4 bg-violet-600 hover:bg-violet-700 rounded-2xl font-semibold text-lg transition-colors motion-safe:hover:scale-105 motion-safe:transform"
+            >
+              Explore Courses
             </Link>
-            <Link href="/contact">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                className="px-10 py-4 border border-white/30 rounded-2xl font-semibold text-lg hover:bg-white/5 transition"
-              >
-                Contact Us
-              </motion.button>
+            <Link
+              href="/contact"
+              className="px-10 py-4 border border-white/30 rounded-2xl font-semibold text-lg hover:bg-white/5 transition-colors"
+            >
+              Contact Us
             </Link>
           </div>
         </div>
       </section>
+      </main>
+
       <Footer />
-    </div>
+    </>
   );
 }

@@ -11,10 +11,11 @@ interface CourseCardProps {
 
 function StarRating({ rating }: { rating: number }) {
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1" aria-label={`Rated ${rating} out of 5`}>
       {[1, 2, 3, 4, 5].map((star) => (
         <Star
           key={star}
+          aria-hidden="true"
           className={`w-3.5 h-3.5 ${
             star <= Math.floor(rating)
               ? 'fill-amber-400 text-amber-400'
@@ -40,10 +41,12 @@ export default function CourseCard({ course, variant = 'default' }: CourseCardPr
       <Link href={`/courses/${course.id}`} className="group">
         <div className="card flex gap-4 p-4 hover:border-brand-200">
           <div className="relative w-40 h-28 rounded-xl overflow-hidden flex-shrink-0 bg-surface-100">
-            <img
+            <Image
               src={course.thumbnail}
-              alt={course.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              alt=""
+              fill
+              sizes="160px"
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
             />
             {course.isFeatured && (
               <div className="absolute top-2 left-2 badge bg-brand-600 text-white text-xs">Featured</div>
@@ -82,21 +85,25 @@ export default function CourseCard({ course, variant = 'default' }: CourseCardPr
       <div className="card overflow-hidden hover:-translate-y-1 hover:border-brand-200">
         {/* Thumbnail */}
         <div className="relative overflow-hidden bg-surface-100 aspect-video">
-          <img
+          <Image
             src={course.thumbnail}
-            alt={course.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            alt=""
+            fill
+            sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
           />
           {/* Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-            <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg transform scale-75 group-hover:scale-100 transition-transform duration-300">
-              <Play className="w-6 h-6 text-brand-600 ml-0.5" />
+            <div aria-hidden="true" className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg transform scale-75 group-hover:scale-100 transition-transform duration-300">
+              <Play aria-hidden="true" className="w-6 h-6 text-brand-600 ml-0.5" />
             </div>
           </div>
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-1.5">
             {course.isFeatured && (
-              <span className="badge bg-brand-600 text-white text-xs shadow-sm">⭐ Featured</span>
+              <span className="badge bg-brand-600 text-white text-xs shadow-sm">
+                <span aria-hidden="true">⭐</span> Featured
+              </span>
             )}
             {course.isFree && (
               <span className="badge bg-emerald-500 text-white text-xs shadow-sm">Free</span>
@@ -119,10 +126,12 @@ export default function CourseCard({ course, variant = 'default' }: CourseCardPr
 
           {/* Instructor */}
           <div className="flex items-center gap-2 mt-3">
-            <img
+            <Image
               src={course.instructor.avatar}
-              alt={course.instructor.name}
-              className="w-6 h-6 rounded-full bg-surface-200"
+              alt=""
+              width={24}
+              height={24}
+              className="w-6 h-6 rounded-full bg-surface-200 object-cover"
             />
             <span className="text-sm text-surface-500">{course.instructor.name}</span>
           </div>
@@ -130,15 +139,15 @@ export default function CourseCard({ course, variant = 'default' }: CourseCardPr
           {/* Stats row */}
           <div className="flex items-center gap-4 mt-3 text-xs text-surface-500">
             <span className="flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5" />
+              <Clock aria-hidden="true" className="w-3.5 h-3.5" />
               {course.duration}
             </span>
             <span className="flex items-center gap-1">
-              <BookOpen className="w-3.5 h-3.5" />
+              <BookOpen aria-hidden="true" className="w-3.5 h-3.5" />
               {course.lessons} lessons
             </span>
             <span className="flex items-center gap-1">
-              <Users className="w-3.5 h-3.5" />
+              <Users aria-hidden="true" className="w-3.5 h-3.5" />
               {course.students.toLocaleString()}
             </span>
           </div>
@@ -166,7 +175,7 @@ export default function CourseCard({ course, variant = 'default' }: CourseCardPr
             </div>
             {course.certificate && (
               <span className="flex items-center gap-1 text-xs text-surface-500">
-                <Award className="w-3.5 h-3.5 text-brand-500" />
+                <Award aria-hidden="true" className="w-3.5 h-3.5 text-brand-500" />
                 Certificate
               </span>
             )}

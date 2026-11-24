@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Phone, Mail, Clock, ArrowRight } from 'lucide-react';
+import Image from 'next/image';
 import Navbar from '../components/navbar';
 import Footer from '../components/footer';
 
@@ -15,14 +16,16 @@ export default function ContactPage() {
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
+    setStatus('');
     setTimeout(() => {
       setSubmitted(false);
       setFormData({ name: '', email: '', subject: '', message: '' });
-      alert("Thank you! Your message has been sent successfully.");
+      setStatus('Thank you! Your message has been sent successfully.');
     }, 1500);
   };
 
@@ -31,20 +34,22 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
-      {/* Navbar */}
+    <>
+      <Navbar />
 
-  <Navbar />
+      <main id="main-content" className="min-h-screen bg-zinc-950 text-white">
       {/* Banner / Hero Section */}
       <div className="relative h-[500px] flex items-center justify-center overflow-hidden">
         {/* Background Image */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=2000')",
-          }}
+        <Image
+          src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=2000"
+          alt=""
+          fill
+          sizes="100vw"
+          preload
+          className="object-cover"
         />
-        
+
         {/* Dark Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/70 to-black/80" />
 
@@ -68,7 +73,10 @@ export default function ContactPage() {
         </div>
 
         {/* Scroll Indicator */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/60 text-sm flex flex-col items-center gap-1">
+        <div
+          aria-hidden="true"
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/60 text-sm flex flex-col items-center gap-1"
+        >
           <span>Scroll to explore</span>
           <motion.div
             animate={{ y: [0, 8, 0] }}
@@ -98,10 +106,17 @@ export default function ContactPage() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm text-zinc-400 mb-2">Full Name</label>
+                      <label
+                        htmlFor="contact-name"
+                        className="block text-sm text-zinc-400 mb-2"
+                      >
+                        Full Name
+                      </label>
                       <input
+                        id="contact-name"
                         type="text"
                         name="name"
+                        autoComplete="name"
                         value={formData.name}
                         onChange={handleChange}
                         required
@@ -110,10 +125,17 @@ export default function ContactPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm text-zinc-400 mb-2">Email Address</label>
+                      <label
+                        htmlFor="contact-email"
+                        className="block text-sm text-zinc-400 mb-2"
+                      >
+                        Email Address
+                      </label>
                       <input
+                        id="contact-email"
                         type="email"
                         name="email"
+                        autoComplete="email"
                         value={formData.email}
                         onChange={handleChange}
                         required
@@ -124,8 +146,14 @@ export default function ContactPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm text-zinc-400 mb-2">Subject</label>
+                    <label
+                      htmlFor="contact-subject"
+                      className="block text-sm text-zinc-400 mb-2"
+                    >
+                      Subject
+                    </label>
                     <input
+                      id="contact-subject"
                       type="text"
                       name="subject"
                       value={formData.subject}
@@ -137,8 +165,14 @@ export default function ContactPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm text-zinc-400 mb-2">Message</label>
+                    <label
+                      htmlFor="contact-message"
+                      className="block text-sm text-zinc-400 mb-2"
+                    >
+                      Message
+                    </label>
                     <textarea
+                      id="contact-message"
                       name="message"
                       value={formData.message}
                       onChange={handleChange}
@@ -157,9 +191,17 @@ export default function ContactPage() {
                     className="w-full bg-violet-600 hover:bg-violet-700 py-4 rounded-2xl font-semibold text-lg flex items-center justify-center gap-3 transition disabled:opacity-70"
                   >
                     {submitted ? "Sending..." : "Send Message"}
-                    <ArrowRight />
+                    <ArrowRight aria-hidden="true" />
                   </motion.button>
                 </form>
+
+                <p
+                  role="status"
+                  aria-live="polite"
+                  className={`mt-4 text-sm text-emerald-400 ${status ? "" : "sr-only"}`}
+                >
+                  {status}
+                </p>
               </div>
             </div>
 
@@ -171,7 +213,7 @@ export default function ContactPage() {
                 <div className="space-y-8">
                   <div className="flex gap-4">
                     <div className="w-11 h-11 bg-violet-500/10 rounded-2xl flex items-center justify-center flex-shrink-0">
-                      <Mail className="w-5 h-5 text-violet-400" />
+                      <Mail aria-hidden="true" className="w-5 h-5 text-violet-400" />
                     </div>
                     <div>
                       <p className="font-medium">Email Us</p>
@@ -183,7 +225,7 @@ export default function ContactPage() {
 
                   <div className="flex gap-4">
                     <div className="w-11 h-11 bg-violet-500/10 rounded-2xl flex items-center justify-center flex-shrink-0">
-                      <Phone className="w-5 h-5 text-violet-400" />
+                      <Phone aria-hidden="true" className="w-5 h-5 text-violet-400" />
                     </div>
                     <div>
                       <p className="font-medium">Call Us</p>
@@ -195,7 +237,7 @@ export default function ContactPage() {
 
                   <div className="flex gap-4">
                     <div className="w-11 h-11 bg-violet-500/10 rounded-2xl flex items-center justify-center flex-shrink-0">
-                      <MapPin className="w-5 h-5 text-violet-400" />
+                      <MapPin aria-hidden="true" className="w-5 h-5 text-violet-400" />
                     </div>
                     <div>
                       <p className="font-medium">Visit Us</p>
@@ -209,7 +251,7 @@ export default function ContactPage() {
 
                   <div className="flex gap-4">
                     <div className="w-11 h-11 bg-violet-500/10 rounded-2xl flex items-center justify-center flex-shrink-0">
-                      <Clock className="w-5 h-5 text-violet-400" />
+                      <Clock aria-hidden="true" className="w-5 h-5 text-violet-400" />
                     </div>
                     <div>
                       <p className="font-medium">Business Hours</p>
@@ -231,7 +273,9 @@ export default function ContactPage() {
           </div>
         </div>
       </div>
+      </main>
+
       <Footer />
-    </div>
+    </>
   );
 }

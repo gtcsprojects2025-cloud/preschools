@@ -1,7 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Star, Users, BookOpen, ArrowRight, Award } from 'lucide-react';
+import { Star, Users, BookOpen, ArrowRight } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import Navbar from '../components/navbar';
 import Footer from '../components/footer';
@@ -60,18 +61,20 @@ const instructors = [
 
 export default function InstructorsPage() {
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
-      {/* Navbar */}
-<Navbar />
+    <>
+      <Navbar />
 
+      <main id="main-content" className="min-h-screen bg-zinc-950 text-white">
       {/* Instructors Banner / Hero Section */}
-      <div className="relative h-screen flex items-center justify-center overflow-hidden">
+      <div className="relative h-screen max-h-[820px] flex items-center justify-center overflow-hidden">
         {/* Background Image with Overlay */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=2000')",
-          }}
+        <Image
+          src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=2000"
+          alt=""
+          fill
+          sizes="100vw"
+          preload
+          className="object-cover"
         />
         
         {/* Gradient Overlays */}
@@ -85,7 +88,7 @@ export default function InstructorsPage() {
             transition={{ duration: 0.8 }}
           >
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-5 py-2 mb-6">
-              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+              <div aria-hidden="true" className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
               <span className="text-sm font-medium tracking-widest">WORLD-CLASS EDUCATORS</span>
             </div>
 
@@ -106,21 +109,21 @@ export default function InstructorsPage() {
             className="mt-16 flex flex-wrap justify-center gap-x-12 gap-y-8 text-sm"
           >
             <div className="flex items-center gap-3">
-              <div className="text-3xl">⭐</div>
+              <div aria-hidden="true" className="text-3xl">⭐</div>
               <div>
                 <div className="font-semibold">4.9/5 Average Rating</div>
                 <div className="text-zinc-400 text-xs">From 12,000+ reviews</div>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="text-3xl">🌍</div>
+              <div aria-hidden="true" className="text-3xl">🌍</div>
               <div>
                 <div className="font-semibold">50+ Countries</div>
                 <div className="text-zinc-400 text-xs">Global teaching impact</div>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="text-3xl">🎓</div>
+              <div aria-hidden="true" className="text-3xl">🎓</div>
               <div>
                 <div className="font-semibold">PhD & Masters Level</div>
                 <div className="text-zinc-400 text-xs">Highly qualified faculty</div>
@@ -129,7 +132,8 @@ export default function InstructorsPage() {
           </motion.div>
 
           {/* Scroll Prompt */}
-          <motion.div 
+          <motion.div
+            aria-hidden="true"
             animate={{ y: [0, 10, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
             className="absolute bottom-12 left-1/2 -translate-x-1/2 text-white/60 text-sm flex flex-col items-center"
@@ -151,14 +155,14 @@ export default function InstructorsPage() {
             WORLD-CLASS EDUCATORS
           </motion.p>
           
-          <motion.h1 
+          <motion.h2
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="text-5xl md:text-6xl font-bold heading-font mt-4 leading-tight"
           >
             Learn from the Best
-          </motion.h1>
+          </motion.h2>
           
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -205,10 +209,12 @@ export default function InstructorsPage() {
               className="group bg-zinc-900 border border-white/10 rounded-3xl overflow-hidden hover:border-violet-500/50 transition-all duration-300"
             >
               <div className="relative h-80 overflow-hidden">
-                <img
+                <Image
                   src={instructor.avatar}
                   alt={instructor.name}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  fill
+                  sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
               </div>
@@ -219,15 +225,15 @@ export default function InstructorsPage() {
 
                 <div className="flex items-center justify-between mt-6 text-sm">
                   <div className="flex items-center gap-1.5">
-                    <Star className="w-5 h-5 text-amber-400 fill-current" />
+                    <Star aria-hidden="true" className="w-5 h-5 text-amber-400 fill-current" />
                     <span className="font-medium">{instructor.rating}</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-zinc-400">
-                    <Users className="w-4 h-4" />
+                    <Users aria-hidden="true" className="w-4 h-4" />
                     {(instructor.students / 1000).toFixed(1)}k Students
                   </div>
                   <div className="flex items-center gap-1.5 text-zinc-400">
-                    <BookOpen className="w-4 h-4" />
+                    <BookOpen aria-hidden="true" className="w-4 h-4" />
                     {instructor.courses} Courses
                   </div>
                 </div>
@@ -247,13 +253,11 @@ export default function InstructorsPage() {
                   ))}
                 </div>
 
-                <Link href="/courses" className="block mt-8">
-                  <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    className="w-full flex items-center justify-center gap-2 bg-white text-black py-4 rounded-2xl font-semibold hover:bg-zinc-100 transition"
-                  >
-                    View Courses <ArrowRight className="w-4 h-4" />
-                  </motion.button>
+                <Link
+                  href="/courses"
+                  className="mt-8 flex items-center justify-center gap-2 bg-white text-black py-4 rounded-2xl font-semibold hover:bg-zinc-100 transition"
+                >
+                  View Courses <ArrowRight aria-hidden="true" className="w-4 h-4" />
                 </Link>
               </div>
             </motion.div>
@@ -297,6 +301,7 @@ export default function InstructorsPage() {
         </div>
       </div>
       <Footer />
-    </div>
+      </main>
+    </>
   );
 }

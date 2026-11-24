@@ -1,176 +1,189 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, Users, Award, Star, Filter, Grid3X3, List } from 'lucide-react';
+import { Clock, Award, Star, Filter, Grid3X3, List, ChevronLeft, ChevronRight, Users } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import Footer from '../components/footer';
 import Navbar from '../components/navbar';
 
-const courses = [
-  {
-    id: 1,
-    slug: "english-quiz-age-7",
-    title: "ENGLISH QUIZ (Age 7)",
-    category: "Language",
-    desc: "Quick and interactive English quiz to build language confidence.",
-    image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800",
-    duration: "1 Hour",
-    level: "Beginner",
-    students: 12,
-    quizzes: 1,
-    free: true,
-    age: "5-7",
-  },
-  {
-    id: 2,
-    slug: "logic-quiz-age-7",
-    title: "LOGIC QUIZ (Age 7)",
-    category: "Logic",
-    desc: "Patterns, sequences, and logical reasoning to exercise young minds.",
-    image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800",
-    duration: "Lifetime",
-    level: "Beginner",
-    students: 8,
-    quizzes: 3,
-    free: true,
-    age: "6-8",
-  },
-  {
-    id: 3,
-    slug: "mathematics-quiz-age-7",
-    title: "MATHEMATICS QUIZ (Age 7)",
-    category: "Mathematics",
-    desc: "Fun mathematical challenges designed for early learners.",
-    image: "https://images.unsplash.com/photo-1588075592446-265fd1e6e76f?w=800",
-    duration: "Lifetime",
-    level: "All Levels",
-    students: 15,
-    quizzes: 12,
-    free: true,
-    age: "5-7",
-  },
-  {
-    id: 4,
-    slug: "science-course-age-7",
-    title: "SCIENCE COURSE (Age 7)",
-    category: "Science",
-    desc: "Fungus / living things quiz and more exciting science topics.",
-    image: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800",
-    duration: "Lifetime",
-    level: "Beginner",
-    students: 7,
-    quizzes: 2,
-    free: true,
-    age: "6-9",
-  },
-];
+interface Course {
+  _id: string;
+  title: string;
+  slug: string;
+  description?: string;
+  subject?: string;
+  grade?: string;
+  duration?: string;
+  thumbnail?: string;
+  category?: string;
+  level?: string;
+  free?: boolean;
+  // Optional extras: the Lesson model does not require them, so always guard
+  // before rendering (otherwise cards print "undefined Students").
+  students?: number;
+  quizzes?: number;
+}
+
+interface PaginationData {
+  currentPage: number;
+  totalPages: number;
+  totalLessons: number;
+}
 
 export default function CoursesPage() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState("All");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid"); // New state
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [pagination, setPagination] = useState<PaginationData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredCourses = courses.filter(course => {
-    const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.desc.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = selectedFilter === "All" || course.category === selectedFilter;
-    return matchesSearch && matchesFilter;
-  });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [selectedFilter, setSelectedFilter] = useState("All");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [requestedPage, setRequestedPage] = useState(1);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  // Debounce the search box so typing does not fire a request per keystroke.
+  // Resetting the page here (rather than in a separate effect) keeps React from
+  // rendering twice and avoids the set-state-in-effect lint rule.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm.trim());
+      setRequestedPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Fetch courses whenever the page, search term or subject filter changes.
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadCourses = async () => {
+      try {
+        const params = new URLSearchParams({
+          page: String(requestedPage),
+          limit: "6",
+        });
+
+        if (debouncedSearch) params.set("q", debouncedSearch);
+        if (selectedFilter !== "All") params.set("subject", selectedFilter);
+
+        const res = await fetch(`/api/lessons?${params.toString()}`, {
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+
+        // Read the body even on failure so the API's `message` (e.g. "catalogue
+        // temporarily unavailable" for a 503) can be shown to the user.
+        const data = await res.json().catch(() => null);
+
+        if (controller.signal.aborted) return;
+
+        if (!res.ok || !data?.success) {
+          setError(
+            data?.message ?? 'We could not load the courses right now. Please try again.'
+          );
+          if (process.env.NODE_ENV === 'development') {
+            console.error(`[courses] /api/lessons responded ${res.status}`);
+          }
+          return;
+        }
+
+        setCourses(data.lessons || []);
+        setPagination(data.pagination);
+      } catch (err) {
+        // AbortError is expected when the component unmounts or the page changes.
+        if (controller.signal.aborted) return;
+        if (process.env.NODE_ENV === 'development') console.error('[courses]', err);
+        setError('We could not load the courses right now. Please try again.');
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    };
+
+    loadCourses();
+
+    return () => controller.abort();
+  }, [requestedPage, reloadKey, debouncedSearch, selectedFilter]);
+
+  // Subject chips come from the loaded page (plus the well-known subjects) so a
+  // new subject in the database shows up without a code change.
+  const filterOptions = useMemo(() => {
+    const defaults = ["Science", "Mathematics", "English", "Logic"];
+    const fromData = courses
+      .map((course) => course.subject ?? course.category)
+      .filter((value): value is string => Boolean(value && value.trim()));
+
+    return ["All", ...Array.from(new Set([...fromData, ...defaults]))];
+  }, [courses]);
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || (pagination && page > pagination.totalPages)) return;
+    setLoading(true);
+    setError(null);
+    setRequestedPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const retryLoad = () => {
+    setLoading(true);
+    setError(null);
+    setReloadKey((key) => key + 1);
+  };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
-      {/* Navbar */}
-    <Navbar />
+    <>
+      <Navbar />
 
-          {/* Courses Banner / Hero Section */}
+      <main
+        id="main-content"
+        aria-busy={loading}
+        className="min-h-screen bg-zinc-950 text-white"
+      >
+      {/* Hero Section */}
       <div className="relative h-[620px] flex items-center justify-center overflow-hidden">
-        {/* Background Image */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=2000')",
-          }}
+        <Image
+          src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=2000"
+          alt=""
+          fill
+          sizes="100vw"
+          preload
+          className="object-cover"
         />
-        
-        {/* Overlays */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/80" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/40" />
-
+        
         <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9 }}
-          >
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-6 py-2.5 mb-6">
-              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-              <span className="uppercase tracking-[3px] text-sm font-medium">Explore Our Curriculum</span>
-            </div>
-
-            <h1 className="text-6xl md:text-7xl font-bold heading-font tracking-tighter leading-none">
-              Discover Engaging<br />Courses for Your Child
-            </h1>
-
-            <p className="mt-8 text-xl text-zinc-200 max-w-2xl mx-auto">
-              Interactive, age-appropriate courses designed to build confidence, 
-              creativity, and a lifelong love for learning.
-            </p>
-          </motion.div>
-
-          {/* Quick Stats */}
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="mt-16 flex flex-wrap justify-center gap-x-10 gap-y-6 text-center"
-          >
-            {[
-              { number: "50+", label: "Fun Courses" },
-              { number: "4.9", label: "Average Rating" },
-              { number: "8,000+", label: "Happy Students" },
-              { number: "Free", label: "Starter Courses" },
-            ].map((stat, i) => (
-              <div key={i} className="min-w-[140px]">
-                <div className="text-4xl font-bold text-[#4E9FE5]">{stat.number}</div>
-                <div className="text-sm text-zinc-400 mt-1">{stat.label}</div>
-              </div>
-            ))}
-          </motion.div>
-
-          {/* Scroll Indicator */}
-          <motion.div
-            animate={{ y: [0, 10, 0] }}
-            transition={{ duration: 2.5, repeat: Infinity }}
-            className="absolute bottom-12 left-1/2 -translate-x-1/2 text-white/50 flex flex-col items-center text-sm"
-          >
-            Scroll to explore courses
-            <span className="text-2xl mt-1">↓</span>
-          </motion.div>
+          <h1 className="text-6xl md:text-7xl font-bold tracking-tighter">
+            Discover Engaging<br />Courses for Your Child
+          </h1>
+          <p className="mt-6 text-xl text-zinc-300">
+            Interactive learning experiences designed for young minds
+          </p>
         </div>
       </div>
 
-      {/* Hero Banner */}
-      {/* <div className="pt-24 pb-16 bg-gradient-to-br from-zinc-900 to-black">
-        <div className="max-w-7xl mx-auto px-6 text-center">
-          <h1 className="text-6xl font-bold heading-font">Our Courses</h1>
-          <p className="mt-4 text-2xl text-zinc-400">Discover engaging learning experiences for your child</p>
-        </div>
-      </div> */}
-
-      {/* Filters & Controls */}
+      {/* Filters */}
       <div className="sticky top-0 bg-zinc-950 border-b border-white/10 z-40">
         <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row gap-6 items-center justify-between">
-          
-          {/* Category Filters */}
-          <div className="flex items-center gap-4">
-            <Filter className="w-5 h-5 text-violet-400" />
-            {["All", "Language", "Mathematics", "Logic", "Science"].map((cat) => (
+          <div
+            className="flex flex-wrap items-center gap-4"
+            role="group"
+            aria-label="Filter courses by subject"
+          >
+            <Filter aria-hidden="true" className="w-5 h-5 text-violet-400" />
+            {filterOptions.map((cat) => (
               <button
                 key={cat}
-                onClick={() => setSelectedFilter(cat)}
+                type="button"
+                onClick={() => {
+                  setSelectedFilter(cat);
+                  setRequestedPage(1);
+                }}
+                aria-pressed={selectedFilter === cat}
                 className={`px-5 py-2 rounded-full text-sm transition ${
-                  selectedFilter === cat ? "bg-violet-600 text-white" : "bg-zinc-900 hover:bg-zinc-800"
+                  selectedFilter === cat ? 'bg-violet-600 text-white' : 'bg-zinc-900 hover:bg-zinc-800'
                 }`}
               >
                 {cat}
@@ -178,135 +191,205 @@ export default function CoursesPage() {
             ))}
           </div>
 
-          {/* Search + View Toggle */}
           <div className="flex items-center gap-4 w-full md:w-auto">
+            <label htmlFor="course-search" className="sr-only">
+              Search courses
+            </label>
             <input
-              type="text"
+              id="course-search"
+              type="search"
               placeholder="Search courses..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="bg-zinc-900 border border-white/10 rounded-2xl px-6 py-3 w-full md:w-80 focus:border-violet-500 outline-none"
+              className="bg-zinc-900 border border-white/10 rounded-2xl px-6 py-3 w-full md:w-80 focus:border-violet-500"
             />
-
-            {/* View Toggle Switch */}
-            <div className="flex border border-white/10 rounded-2xl p-1 bg-zinc-900">
+            <div
+              className="flex border border-white/10 rounded-2xl p-1"
+              role="group"
+              aria-label="Course layout"
+            >
               <button
+                type="button"
                 onClick={() => setViewMode("grid")}
-                className={`p-3 rounded-xl transition ${viewMode === "grid" ? "bg-zinc-800" : "hover:bg-zinc-800"}`}
+                aria-label="Grid view"
+                aria-pressed={viewMode === "grid"}
+                className={`p-3 rounded-xl ${viewMode === "grid" ? "bg-zinc-800" : ""}`}
               >
-                <Grid3X3 className="w-5 h-5" />
+                <Grid3X3 aria-hidden="true" className="w-5 h-5" />
               </button>
               <button
+                type="button"
                 onClick={() => setViewMode("list")}
-                className={`p-3 rounded-xl transition ${viewMode === "list" ? "bg-zinc-800" : "hover:bg-zinc-800"}`}
+                aria-label="List view"
+                aria-pressed={viewMode === "list"}
+                className={`p-3 rounded-xl ${viewMode === "list" ? "bg-zinc-800" : ""}`}
               >
-                <List className="w-5 h-5" />
+                <List aria-hidden="true" className="w-5 h-5" />
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Courses Display */}
+      {/* Courses Section */}
       <div className="max-w-7xl mx-auto px-6 py-16">
-        {viewMode === "grid" ? (
-          /* Grid Layout */
+        {error ? (
+          <div className="text-center py-16">
+            <p role="alert" className="text-red-400">{error}</p>
+            <button
+              type="button"
+              onClick={retryLoad}
+              className="mt-6 px-6 py-3 rounded-full bg-violet-600 hover:bg-violet-700 transition"
+            >
+              Try again
+            </button>
+          </div>
+        ) : loading ? (
+          <p role="status" aria-live="polite" className="text-center text-zinc-400 py-16">
+            Loading amazing courses…
+          </p>
+        ) : viewMode === "grid" ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredCourses.map((course, index) => (
+            {courses.map((course) => (
               <motion.div
-                key={course.id}
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
+                key={course._id}
                 whileHover={{ y: -8 }}
-                className="bg-zinc-900 border border-white/10 rounded-3xl overflow-hidden hover:border-violet-500/50 group"
+                className="bg-zinc-900 border border-white/10 rounded-3xl overflow-hidden group"
               >
                 <div className="relative h-56">
-                  <img src={course.image} alt={course.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
-                  {course.free && <div className="absolute top-4 right-4 bg-emerald-500 text-black text-xs font-bold px-4 py-1 rounded-full">FREE</div>}
+                  <Image
+                    src={course.thumbnail || "https://picsum.photos/id/1015/600/400"}
+                    alt={course.title}
+                    fill
+                    sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                    className="object-cover group-hover:scale-105 transition-transform"
+                  />
                 </div>
-
                 <div className="p-8">
-                  <div className="text-violet-400 text-sm font-medium mb-2">{course.category}</div>
-                  <h3 className="text-2xl font-semibold">{course.title}</h3>
-                  <p className="text-zinc-400 mt-3 line-clamp-3">{course.desc}</p>
+                  <div className="text-violet-400 text-sm mb-2">{course.subject || course.category}</div>
+                  <h3 className="text-2xl font-semibold mb-3">{course.title}</h3>
+                  <p className="text-zinc-400 line-clamp-3 mb-6">{course.description}</p>
 
                   <div className="mt-6 grid grid-cols-2 gap-4 text-sm text-zinc-400">
-                    <div className="flex items-center gap-2"><Clock className="w-4 h-4" /> {course.duration}</div>
-                    <div className="flex items-center gap-2"><Award className="w-4 h-4" /> {course.level}</div>
-                    <div className="flex items-center gap-2"><Users className="w-4 h-4" /> {course.students} Students</div>
-                    <div className="flex items-center gap-2"><Star className="w-4 h-4" /> {course.quizzes} Quizzes</div>
+                    <div className="flex items-center gap-2"><Clock aria-hidden="true" className="w-4 h-4" /> {course.duration || 'Self-paced'}</div>
+                    <div className="flex items-center gap-2"><Award aria-hidden="true" className="w-4 h-4" /> {course.level || course.grade || 'All levels'}</div>
+                    {typeof course.students === 'number' && (
+                      <div className="flex items-center gap-2"><Users aria-hidden="true" className="w-4 h-4" /> {course.students} Students</div>
+                    )}
+                    {typeof course.quizzes === 'number' && (
+                      <div className="flex items-center gap-2"><Star aria-hidden="true" className="w-4 h-4" /> {course.quizzes} Quizzes</div>
+                    )}
                   </div>
-
-                  <div className="mt-8 flex gap-3">
-                    <Link href={`/courses/${course.slug}`} className="flex-1">
-                      <button className="w-full border border-white/30 py-4 rounded-2xl hover:bg-white/5 transition">
-                        View Details
-                      </button>
-                    </Link>
-                    <button className="flex-1 bg-white text-black py-4 rounded-2xl font-semibold hover:bg-zinc-100 transition">
-                      Start Now
-                    </button>
-                  </div>
+                  
+                  <Link
+                    href={`/courses/content/${course._id}`}
+                    className="block mt-6 w-full py-4 bg-white text-black text-center rounded-2xl font-semibold hover:bg-zinc-100 transition"
+                  >
+                    View Course
+                  </Link>
                 </div>
               </motion.div>
             ))}
           </div>
         ) : (
-          /* List Layout */
           <div className="space-y-6">
-            {filteredCourses.map((course, index) => (
-              <motion.div
-                key={course.id}
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="bg-zinc-900 border border-white/10 rounded-3xl p-6 flex flex-col md:flex-row gap-6 hover:border-violet-500/50 transition group"
+            {courses.map((course) => (
+              <div
+                key={course._id}
+                className="bg-zinc-900 border border-white/10 rounded-3xl overflow-hidden sm:flex"
               >
-                <div className="md:w-72 h-48 md:h-auto rounded-2xl overflow-hidden flex-shrink-0">
-                  <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
+                <div className="relative h-52 sm:h-auto sm:w-64 flex-shrink-0">
+                  <Image
+                    src={course.thumbnail || "https://picsum.photos/id/1015/600/400"}
+                    alt={course.title}
+                    fill
+                    sizes="(min-width: 640px) 256px, 100vw"
+                    className="object-cover"
+                  />
                 </div>
-
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="text-violet-400 text-sm font-medium">{course.category} • Ages {course.age}</div>
-                      <h3 className="text-2xl font-semibold mt-2">{course.title}</h3>
-                    </div>
-                    {course.free && <span className="bg-emerald-500 text-black text-xs font-bold px-4 py-2 rounded-full">FREE</span>}
+                <div className="p-6 flex-1">
+                  <div className="text-violet-400 text-sm mb-1">
+                    {course.subject || course.category}
                   </div>
-
-                  <p className="text-zinc-400 mt-4">{course.desc}</p>
-
-                  <div className="mt-6 flex flex-wrap gap-6 text-sm text-zinc-400">
-                    <div className="flex items-center gap-2"><Clock className="w-4 h-4" /> {course.duration}</div>
-                    <div className="flex items-center gap-2"><Award className="w-4 h-4" /> {course.level}</div>
-                    <div className="flex items-center gap-2"><Users className="w-4 h-4" /> {course.students} Students</div>
+                  <h3 className="text-xl font-semibold mb-2">{course.title}</h3>
+                  <p className="text-zinc-400 line-clamp-2 mb-4">{course.description}</p>
+                  <div className="flex flex-wrap items-center gap-4 text-sm text-zinc-400">
+                    <span className="flex items-center gap-2">
+                      <Clock aria-hidden="true" className="w-4 h-4" /> {course.duration || 'Self-paced'}
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <Award aria-hidden="true" className="w-4 h-4" /> {course.level || course.grade || 'All levels'}
+                    </span>
+                    {typeof course.students === 'number' && (
+                      <span className="flex items-center gap-2">
+                        <Users aria-hidden="true" className="w-4 h-4" /> {course.students} Students
+                      </span>
+                    )}
                   </div>
-
-                  <div className="mt-8 flex gap-4">
-                    <Link href={`/courses/${course.slug}`} className="flex-1 md:flex-none">
-                      <button className="w-full md:w-auto px-8 py-4 border border-white/30 rounded-2xl hover:bg-white/5 transition">
-                        View Details
-                      </button>
-                    </Link>
-                    <button className="flex-1 md:flex-none bg-white text-black px-8 py-4 rounded-2xl font-semibold hover:bg-zinc-100 transition">
-                      Start Course
-                    </button>
-                  </div>
+                  <Link
+                    href={`/courses/content/${course._id}`}
+                    className="inline-block mt-5 px-6 py-3 bg-white text-black rounded-full font-semibold hover:bg-zinc-100 transition"
+                  >
+                    View Course
+                  </Link>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         )}
 
-        {filteredCourses.length === 0 && (
-          <div className="text-center py-20 text-2xl text-zinc-400">
-            No courses found.
-          </div>
+        {!loading && !error && courses.length === 0 && (
+          <p className="text-center text-zinc-400 py-16">
+            {debouncedSearch || selectedFilter !== 'All'
+              ? 'No courses match your search. Try a different keyword or subject.'
+              : 'No courses have been published yet. Check back soon.'}
+          </p>
+        )}
+
+        {/* Pagination */}
+        {!loading && !error && pagination && pagination.totalPages > 1 && (
+          <nav
+            aria-label="Course pagination"
+            className="flex justify-center items-center mt-16 gap-4"
+          >
+            <button
+              type="button"
+              onClick={() => handlePageChange(requestedPage - 1)}
+              disabled={requestedPage === 1}
+              aria-label="Previous page"
+              className="p-2 rounded-full bg-zinc-900 disabled:opacity-40 hover:bg-zinc-800 transition"
+            >
+              <ChevronLeft aria-hidden="true" />
+            </button>
+
+            {Array.from({ length: pagination.totalPages }).map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => handlePageChange(i + 1)}
+                aria-label={`Page ${i + 1}`}
+                aria-current={requestedPage === i + 1 ? "page" : undefined}
+                className={`w-10 h-10 rounded-full ${requestedPage === i + 1 ? 'bg-violet-600' : 'bg-zinc-800'}`}
+              >
+                {i + 1}
+              </button>
+            ))}
+
+            <button
+              type="button"
+              onClick={() => handlePageChange(requestedPage + 1)}
+              disabled={requestedPage === pagination.totalPages}
+              aria-label="Next page"
+              className="p-2 rounded-full bg-zinc-900 disabled:opacity-40 hover:bg-zinc-800 transition"
+            >
+              <ChevronRight aria-hidden="true" />
+            </button>
+          </nav>
         )}
       </div>
+      </main>
+
       <Footer />
-    </div>
+    </>
   );
 }
